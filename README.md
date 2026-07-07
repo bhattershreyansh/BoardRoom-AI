@@ -6,7 +6,7 @@ This README serves as your guide to understanding how the application works, its
 
 ---
 
-## 🎯 High-Level Overview
+## High-Level Overview
 
 The system is broken down into three distinct phases:
 
@@ -29,7 +29,7 @@ The system is broken down into three distinct phases:
 
 ---
 
-## 🚀 Step-by-Step Demo Guide
+## Step-by-Step Demo Guide
 
 Here is exactly how to run through a demo of the application:
 
@@ -94,4 +94,4 @@ If you are running the project locally for the demo, ensure the following three 
    python conductor/agent.py dev
    ```
 
-*Tip: Make sure your `.env` file is fully populated with `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `NEON_DB_URL`, and `ANTHROPIC_API_KEY` before starting.*
+*Tip: Make sure your `.env` file is fully populated with `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `NEON_DB_URL`, and `GROQ` before starting.*
