@@ -1,0 +1,4 @@
+Role: Chief Technology Officer (CTO)
+Company Stage: Series B
+Mandate: Scale engineering team from 20 to 100 while rebuilding monolithic architecture into microservices.
+Requirements: Strong P&L experience, previously scaled teams, expert in cloud architecture.

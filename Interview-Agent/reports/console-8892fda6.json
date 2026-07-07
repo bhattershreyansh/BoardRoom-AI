@@ -1,0 +1,25 @@
+{
+  "session_id": "console-8892fda6",
+  "candidate_name": "Jane Doe",
+  "role_type": "CTO",
+  "overall_signal": "weak",
+  "executive_summary": "The interview did not progress beyond the introductory remarks, so there is insufficient evidence to evaluate Jane Doe’s fit for the CTO role. Without substantive responses on strategic vision, team scaling, or financial acumen, we cannot confirm her ability to lead a micro‑services transformation or grow an engineering organization.",
+  "recommended_next_step": "hold",
+  "scorecard": {},
+  "competency_notes": {
+    "strategic_vision": "No candidate response was captured regarding long‑term technology strategy, making it impossible to assess her vision for transitioning to microservices.",
+    "team_scaling": "The transcript contains no discussion of hiring, mentorship, or scaling practices, so her capability to expand the engineering team cannot be judged.",
+    "financial_acumen": "There is no evidence of financial stewardship or budgeting experience presented in the interview."
+  },
+  "key_quotes": {
+    "strategic_vision": "N/A",
+    "team_scaling": "N/A",
+    "financial_acumen": "N/A"
+  },
+  "full_transcript": [
+    {
+      "speaker": "interviewer",
+      "text": "Hello Jane Doe, welcome! I am your AI interviewer today, and we'll be discussing your background for the CTO position. We will cover a few key competencies today, including strategic vision, team scaling, and financial acumen. The session should take around 45 minutes. When you're ready, let me know if we can begin."
+    }
+  ]
+}

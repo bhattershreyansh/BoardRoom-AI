@@ -1,0 +1,43 @@
+{
+  "session_id": "console-39bce647",
+  "candidate_name": "Jane Doe",
+  "role_type": "CTO",
+  "overall_signal": "weak",
+  "executive_summary": "Jane Doe’s response reveals a leadership style centered on team morale rather than articulating a concrete strategic vision aligned with rapid growth and micro‑service transformation. She did not demonstrate experience in scaling engineering organizations, setting technical roadmaps, or linking team objectives to long‑term business goals, which are critical for a CTO tasked with scaling and architectural transition.",
+  "recommended_next_step": "hold",
+  "scorecard": {
+    "strategic_vision": {
+      "average_score": 1.6,
+      "grade": "Weak",
+      "candidate_turns_count": 2
+    }
+  },
+  "competency_notes": {
+    "strategic_vision": "The candidate’s answer focuses on creating a pleasant work environment but lacks depth on aligning teams with company strategy, especially during scaling. This reflects a weak grasp of strategic vision, which is essential for a CTO role."
+  },
+  "key_quotes": {
+    "strategic_vision": "So my vision when I'm leading a team is simple that my team should enjoy working with me."
+  },
+  "full_transcript": [
+    {
+      "speaker": "interviewer",
+      "text": "Hello, I am your AI interviewer. Are you ready to begin?"
+    },
+    {
+      "speaker": "candidate",
+      "text": "Yes. I am ready to begin."
+    },
+    {
+      "speaker": "interviewer",
+      "text": "Great! To kick things off, I'd love to hear about your strategic vision when leading a team. How do you ensure that your team is aligned with the company's long-term goals, especially during periods of rapid growth?"
+    },
+    {
+      "speaker": "candidate",
+      "text": "So my vision when I'm leading a team is simple that my team should enjoy working with me. My only goal. Should not be yeah. Obviously, there are timelines to be met, and there are a lot of things to be done. But as soon as I'm their leader, they should they should not have any doubt coming to me. They should not hesitate to come to me. And, uh, they should enjoy their work. That's it."
+    },
+    {
+      "speaker": "interviewer",
+      "text": "It sounds like fostering a positive team environment is crucial to your leadership approach. However, with scaling teams, challenges often arise. Can you share a specific instance where you faced a significant challenge while scaling a team, and how you navigated that situation?"
+    }
+  ]
+}

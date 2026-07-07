@@ -1,0 +1,39 @@
+{
+  "session_id": "218f1117-722d-4d90-982b-2b47d2de2e61",
+  "candidate_name": "Rahul Mehta",
+  "role_type": "Chief Technology Officer",
+  "overall_signal": "weak",
+  "executive_summary": "Rahul Mehta provided minimal input, offering only a brief acknowledgment and no substantive discussion of his career or technology strategy. The lack of demonstrated vision, roadmap articulation, or examples of leading AI/ML initiatives suggests a weak alignment with the CTO mandate. Given the weak technology strategy score and insufficient evidence of leadership depth, he does not currently meet the expectations for this role.",
+  "recommended_next_step": "reject",
+  "scorecard": {
+    "Technology Strategy": {
+      "average_score": 1.8,
+      "grade": "Weak",
+      "candidate_turns_count": 1
+    }
+  },
+  "competency_notes": {
+    "Technology Strategy": "The candidate did not articulate any technology strategy, vision, or roadmap, leaving the interview unable to assess his ability to define and execute strategic initiatives. This aligns with the pre‑calculated weak score (1.8) and raises concerns about his readiness to lead technology at the executive level."
+  },
+  "key_quotes": {
+    "Technology Strategy": "Am ready."
+  },
+  "full_transcript": [
+    {
+      "speaker": "interviewer",
+      "text": "Hello Rahul Mehta, welcome! I am your AI interviewer today, and we'll be discussing your background for the Chief Technology Officer position. We will cover a few key competencies today, including AI/ML Innovation, Talent Development, Business Leadership, Technology Strategy, Security & Compliance, Engineering Organization Scaling, and Architecture & Distributed Systems. The session should take around 75 minutes. When you're ready, let me know if we can begin."
+    },
+    {
+      "speaker": "candidate",
+      "text": "Am ready."
+    },
+    {
+      "speaker": "interviewer",
+      "text": "Great! To start, could you walk me through your career journey? What experiences have shaped your approach to technology leadership?"
+    },
+    {
+      "speaker": "interviewer",
+      "text": "Hello Rahul Mehta, welcome! I am your AI interviewer today, and we'll be discussing your background for the Chief Technology Officer"
+    }
+  ]
+}

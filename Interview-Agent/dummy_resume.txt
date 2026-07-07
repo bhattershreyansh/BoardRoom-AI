@@ -1,0 +1,5 @@
+Candidate: Alice Smith
+Experience:
+- VP of Engineering at StartUpX (2020-2024): Managed 15 engineers. Re-architected AWS backend. Didn't manage P&L.
+- Senior Engineer at BigCorp (2015-2019): Built scalable services.
+Gap: Took 2019-2020 off to travel.
