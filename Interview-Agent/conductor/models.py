@@ -14,6 +14,8 @@ class TurnScore(BaseModel):
     composite: float                    # Average of the signal scores
     probe_needed: bool                  # True if composite < threshold (default 3.0)
     rationale: Optional[str] = None     # Optional explanation from the scorer
+    confidence: Optional[str] = "medium" # Scorer confidence: "high", "medium", "low"
+    is_rehearsed: Optional[bool] = False # True if candidate seems rehearsed/memorized
 
 class SessionState(BaseModel):
     # Session Metadata
@@ -38,4 +40,6 @@ class SessionState(BaseModel):
 class RawScorerOutput(BaseModel):
     scores: Dict[str, int]  # keys: specificity, consequence, self_awareness, relevance, depth
     rationale: str
+    confidence: str
+    is_rehearsed: bool
 

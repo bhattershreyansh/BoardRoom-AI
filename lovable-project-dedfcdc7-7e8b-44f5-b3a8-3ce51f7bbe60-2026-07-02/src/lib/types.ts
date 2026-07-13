@@ -52,6 +52,12 @@ export type OverallSignal =
   | "lean_no_hire"
   | string;
 
+export interface BehavioralIndicators {
+  overall_confidence: "High" | "Medium" | "Low";
+  rehearsed_answers_count: number;
+  evasive_answers_count: number;
+}
+
 export interface Report {
   session_id?: string;
   candidate_name?: string;
@@ -61,4 +67,7 @@ export interface Report {
   recommended_next_step: string;
   competency_notes: CompetencyNote[];
   key_quotes: KeyQuote[];
+  key_strengths?: string[];
+  key_risks?: string[];
+  behavioral_indicators?: BehavioralIndicators;
 }

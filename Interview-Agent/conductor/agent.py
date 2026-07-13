@@ -3,14 +3,15 @@ import os
 import asyncio
 import uuid
 import json
+import random
 from typing import Optional, Set
 from sqlalchemy import select
 
 # Dynamically add the parent directory to python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, cli, llm, inference, ConversationItemAddedEvent, AgentSession
+from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, cli, llm, inference, ConversationItemAddedEvent, AgentSession, TurnHandlingOptions
 from livekit.agents.voice import Agent
-from livekit.plugins import silero
+from livekit.plugins import silero, speechmatics, cartesia
 
 from core.utils.logger import get_logger
 from core.config.settings import settings
@@ -49,37 +50,37 @@ class InterviewAgent(Agent):
         
         # Build a premium, warm introduction dynamically
         name = profile.candidate.full_name
-        role = profile.jd.role_type
-        duration = profile.jd.expected_duration_minutes
-        comps = [c.replace("_", " ") for c in profile.jd.competency_weights.keys()]
-        if len(comps) > 1:
-            comp_str = ", ".join(comps[:-1]) + ", and " + comps[-1]
-        elif comps:
-            comp_str = comps[0]
-        else:
-            comp_str = "your professional experience"
-            
+        first_name = name.split()[0] if name else "there"
         opening_text = (
-            f"Hello {name}, welcome! I am your AI interviewer today, and we'll be discussing your background "
-            f"for the {role} position. We will cover a few key competencies today, including {comp_str}. "
-            f"The session should take around {duration} minutes. When you're ready, let me know if we can begin."
+            f"Hi {first_name}. Thanks for joining. "
+            f"To start, I'd like to understand your background first. "
+            f"Then, we'll discuss leadership, technology strategy, and some situations from your previous roles. "
+            f"Let's begin."
         )
         self.last_question = {"text": opening_text}
         
         super().__init__(
             instructions=initial_prompt,
             vad=silero.VAD.load(),
-            stt=inference.STT(
-                model="deepgram/nova-3",
-                language="en"
+            stt=speechmatics.STT(
+                turn_detection_mode=speechmatics.TurnDetectionMode.ADAPTIVE,
+                end_of_utterance_silence_trigger=1.5,
+            ),
+            turn_handling=TurnHandlingOptions(
+                turn_detection="stt",
+                endpointing={
+                    "min_delay": 1.5,
+                }
             ),
             llm=inference.LLM(
                 model="openai/gpt-4o-mini"
             ),
-            tts=inference.TTS(
-                model="elevenlabs/eleven_turbo_v2_5",
-                voice="Xb7hH8MSUJpSbSDYk0k2",
-                language="en"
+            tts=cartesia.TTS(
+                api_key=os.getenv("CARTESIA_API_KEY"),
+                model="sonic-3",
+                voice="db6b0ed5-d5d3-463d-ae85-518a07d3c2b4",
+                language="en",
+                speed=1.0,
             ),
             chat_ctx=llm.ChatContext()
         )
@@ -134,7 +135,7 @@ class InterviewAgent(Agent):
             remaining_weights = {k: v for k, v in self.profile.jd.competency_weights.items() 
                                  if k not in self.state.competencies_covered}
             if remaining_weights:
-                self.state.current_competency = max(remaining_weights, key=remaining_weights.get)
+                self.state.current_competency = random.choice(list(remaining_weights.keys()))
             else:
                 next_action = "closing"
                 self.state.phase = "closing"

@@ -297,13 +297,8 @@ async def get_session_report(session_id: str, db: AsyncSession = Depends(get_db)
             "note": note_text
         })
 
-    # Format key quotes
+    # Format key quotes (deprecated, kept empty for backward compatibility)
     key_quotes = []
-    for comp_key, quote_text in raw_report.get("key_quotes", {}).items():
-        key_quotes.append({
-            "quote": quote_text,
-            "context": comp_key.replace("_", " ").title()
-        })
 
     # Map backend overall signal ("strong" | "mixed" | "weak") to frontend values
     raw_signal = raw_report.get("overall_signal", "mixed").lower()
@@ -322,7 +317,14 @@ async def get_session_report(session_id: str, db: AsyncSession = Depends(get_db)
         "overall_signal": overall_signal,
         "recommended_next_step": raw_report.get("recommended_next_step", "hold"),
         "competency_notes": competency_notes,
-        "key_quotes": key_quotes
+        "key_quotes": key_quotes,
+        "key_strengths": raw_report.get("key_strengths", []),
+        "key_risks": raw_report.get("key_risks", []),
+        "behavioral_indicators": raw_report.get("behavioral_indicators", {
+            "overall_confidence": "Medium",
+            "rehearsed_answers_count": 0,
+            "evasive_answers_count": 0
+        })
     }
 
 @router.get("")

@@ -22,7 +22,7 @@ import type { Session } from "@/lib/types";
 function fmtTime(value: string) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value || "—";
-  return format(d, "MMM d, yyyy · h:mm a");
+  return format(d, "MMM d, yyyy");
 }
 
 export function SessionsTable({ filter }: { filter?: "upcoming" | "completed" | "candidates" }) {
@@ -218,7 +218,6 @@ function EditModal({ session, onClose }: EditModalProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Parse time and date from ISO when session is loaded
@@ -230,7 +229,6 @@ function EditModal({ session, onClose }: EditModalProps) {
         const d = new Date(session.scheduled_time);
         if (!Number.isNaN(d.getTime())) {
           setDate(d.toISOString().split("T")[0]);
-          setTime(d.toTimeString().split(" ")[0].slice(0, 5));
         }
       }
     }
@@ -240,14 +238,14 @@ function EditModal({ session, onClose }: EditModalProps) {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !date || !time) {
+    if (!name.trim() || !email.trim() || !date) {
       toast.error("Please fill out all fields.");
       return;
     }
 
     setIsUpdating(true);
     try {
-      const combinedDateTime = new Date(`${date}T${time}:00`);
+      const combinedDateTime = new Date(date);
       await updateSession.mutateAsync({
         sessionId: session.session_id,
         payload: {
@@ -292,38 +290,20 @@ function EditModal({ session, onClose }: EditModalProps) {
               disabled={isUpdating}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-date" className="text-foreground">Date</Label>
-              <div className="relative group">
-                <Input 
-                  id="edit-date" 
-                  type="date" 
-                  value={date} 
-                  onChange={(e) => setDate(e.target.value)} 
-                  onClick={(e) => "showPicker" in HTMLInputElement.prototype && e.currentTarget.showPicker()}
-                  onKeyDown={(e) => e.preventDefault()}
-                  disabled={isUpdating}
-                  className="w-full pl-10 cursor-pointer text-foreground transition-all group-hover:border-primary/40"
-                />
-                <CalendarClock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-hover:text-primary/70" />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-time" className="text-foreground">Time</Label>
-              <div className="relative group">
-                <Input 
-                  id="edit-time" 
-                  type="time" 
-                  value={time} 
-                  onChange={(e) => setTime(e.target.value)} 
-                  onClick={(e) => "showPicker" in HTMLInputElement.prototype && e.currentTarget.showPicker()}
-                  onKeyDown={(e) => e.preventDefault()}
-                  disabled={isUpdating}
-                  className="w-full pl-10 cursor-pointer text-foreground transition-all group-hover:border-primary/40"
-                />
-                <CalendarClock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-hover:text-primary/70" />
-              </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-date" className="text-foreground">Date</Label>
+            <div className="relative group">
+              <Input 
+                id="edit-date" 
+                type="date" 
+                value={date} 
+                onChange={(e) => setDate(e.target.value)} 
+                onClick={(e) => "showPicker" in HTMLInputElement.prototype && e.currentTarget.showPicker()}
+                onKeyDown={(e) => e.preventDefault()}
+                disabled={isUpdating}
+                className="w-full pl-10 cursor-pointer text-foreground transition-all group-hover:border-primary/40"
+              />
+              <CalendarClock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-hover:text-primary/70" />
             </div>
           </div>
           <DialogFooter className="pt-2">

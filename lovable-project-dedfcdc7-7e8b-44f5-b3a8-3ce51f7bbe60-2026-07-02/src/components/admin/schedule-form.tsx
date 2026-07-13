@@ -30,7 +30,6 @@ const schema = z.object({
   candidate_email: z.string().trim().email("Enter a valid email").max(255),
   role_type: z.string().min(1, "Select a target role"),
   scheduled_date: z.string().min(1, "Pick a date"),
-  scheduled_time: z.string().min(1, "Pick a time"),
 });
 
 export function ScheduleForm() {
@@ -38,7 +37,6 @@ export function ScheduleForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [scheduledDate, setScheduledDate] = useState("");
-  const [scheduledTime, setScheduledTime] = useState("");
   const [resume, setResume] = useState<File | null>(null);
   const [jdMode, setJdMode] = useState<"text" | "file">("text");
   const [jdText, setJdText] = useState("");
@@ -56,7 +54,6 @@ export function ScheduleForm() {
     setName("");
     setEmail("");
     setScheduledDate("");
-    setScheduledTime("");
     setResume(null);
     setJdText("");
     setJdFile(null);
@@ -70,7 +67,6 @@ export function ScheduleForm() {
       candidate_email: email,
       role_type: roleType,
       scheduled_date: scheduledDate,
-      scheduled_time: scheduledTime,
     });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
@@ -86,7 +82,7 @@ export function ScheduleForm() {
     }
 
     try {
-      const combinedDateTime = new Date(`${parsed.data.scheduled_date}T${parsed.data.scheduled_time}:00`);
+      const combinedDateTime = new Date(parsed.data.scheduled_date);
       const res = await ingest.mutateAsync({
         candidate_name: parsed.data.candidate_name,
         candidate_email: parsed.data.candidate_email,
@@ -160,22 +156,6 @@ export function ScheduleForm() {
                   type="date"
                   value={scheduledDate}
                   onChange={(e) => setScheduledDate(e.target.value)}
-                  onClick={(e) => "showPicker" in HTMLInputElement.prototype && e.currentTarget.showPicker()}
-                  onKeyDown={(e) => e.preventDefault()}
-                  className="w-full pl-10 cursor-pointer text-foreground transition-all group-hover:border-primary/40"
-                />
-                <CalendarClock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-hover:text-primary/70" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="scheduled-time" className="text-foreground">Scheduled Time</Label>
-              <div className="relative group">
-                <Input
-                  id="scheduled-time"
-                  type="time"
-                  value={scheduledTime}
-                  onChange={(e) => setScheduledTime(e.target.value)}
                   onClick={(e) => "showPicker" in HTMLInputElement.prototype && e.currentTarget.showPicker()}
                   onKeyDown={(e) => e.preventDefault()}
                   className="w-full pl-10 cursor-pointer text-foreground transition-all group-hover:border-primary/40"

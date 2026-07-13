@@ -46,20 +46,24 @@ class ReportGenerator:
             )
         scorecard_table = "\n".join(scorecard_rows)
 
-        # Build detailed notes & quotes section
+        # Build detailed notes section
         details_list = []
         for comp in report.scorecard.keys():
             formatted_name = comp.replace("_", " ").title()
             note = report.competency_notes.get(comp, "No notes available.")
-            quote = report.key_quotes.get(comp, "")
             
             details_list.append(f"""
 ### 🎯 {formatted_name}
 * **Score**: {report.scorecard[comp].average_score}/5 (`{report.scorecard[comp].grade}`)
 * **Assessor Note**: {note}
-{f'* **Key Quote**: *"{quote}"*' if quote else ''}
 """)
         details_section = "\n".join(details_list)
+
+        # Build key strengths list
+        strengths_list = "\n".join([f"- {s}" for s in report.key_strengths])
+        
+        # Build key risks list
+        risks_list = "\n".join([f"- {r}" for r in report.key_risks])
 
         # Build transcript appendix
         transcript_rows = []
@@ -83,6 +87,17 @@ class ReportGenerator:
 
 ### Executive Summary
 {report.executive_summary}
+
+### Key Strengths
+{strengths_list}
+
+### Risks & Concerns
+{risks_list}
+
+### 🧠 Behavioral & Integrity Indicators
+* **Speaking Confidence**: `{report.behavioral_indicators.overall_confidence}`
+* **Rehearsed/Scripted Answers Flagged**: `{report.behavioral_indicators.rehearsed_answers_count}`
+* **Evasive/Off-Topic Responses Flagged**: `{report.behavioral_indicators.evasive_answers_count}`
 
 ### Competency Breakdown
 | Competency | Score | Grade | Turns Scored |

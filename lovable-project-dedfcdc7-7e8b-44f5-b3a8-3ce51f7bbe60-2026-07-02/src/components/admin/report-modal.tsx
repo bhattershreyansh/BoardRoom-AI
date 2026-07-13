@@ -6,7 +6,8 @@ import {
   FileText,
   Gauge,
   Loader2,
-  Quote,
+  CheckCircle2,
+  Brain,
 } from "lucide-react";
 import {
   Dialog,
@@ -112,6 +113,70 @@ export function ReportModal({
               </p>
             </section>
 
+            {/* Strengths & Risks */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              {report.key_strengths && report.key_strengths.length > 0 && (
+                <section className="rounded-xl border border-success/30 bg-success/5 p-5">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-success">
+                    <CheckCircle2 className="h-4 w-4" /> Key Strengths
+                  </h3>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    {report.key_strengths.map((s, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-success" />
+                        <span>{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {report.key_risks && report.key_risks.length > 0 && (
+                <section className="rounded-xl border border-destructive/25 bg-destructive/5 p-5">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-destructive">
+                    <AlertTriangle className="h-4 w-4" /> Risks & Concerns
+                  </h3>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    {report.key_risks.map((r, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
+                        <span>{r}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </div>
+
+            {/* Behavioral Indicators */}
+            {report.behavioral_indicators && (
+              <section className="rounded-xl border border-border/60 bg-secondary/10 p-5">
+                <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Brain className="h-4 w-4 text-primary" /> Behavioral & Integrity Indicators
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="rounded-lg border border-border/40 bg-card p-4">
+                    <div className="text-xs font-medium text-muted-foreground uppercase">Speaking Confidence</div>
+                    <div className="mt-1 text-lg font-semibold text-foreground">
+                      {report.behavioral_indicators.overall_confidence}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-border/40 bg-card p-4">
+                    <div className="text-xs font-medium text-muted-foreground uppercase">Rehearsed Responses</div>
+                    <div className="mt-1 text-lg font-semibold text-foreground">
+                      {report.behavioral_indicators.rehearsed_answers_count} flagged
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-border/40 bg-card p-4">
+                    <div className="text-xs font-medium text-muted-foreground uppercase">Evasive Answers</div>
+                    <div className="mt-1 text-lg font-semibold text-foreground">
+                      {report.behavioral_indicators.evasive_answers_count} flagged
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* Competencies */}
             {report.competency_notes?.length > 0 && (
               <section className="rounded-xl border border-border/60 bg-secondary/20 p-5">
@@ -121,33 +186,6 @@ export function ReportModal({
                 <div className="space-y-4">
                   {report.competency_notes.map((c, i) => (
                     <CompetencyBar key={i} note={c} index={i} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Key quotes */}
-            {report.key_quotes?.length > 0 && (
-              <section>
-                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <Quote className="h-4 w-4 text-primary" /> Key Quotes
-                </h3>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {report.key_quotes.map((q, i) => (
-                    <figure
-                      key={i}
-                      className="rounded-xl border border-border/60 bg-secondary/25 p-4"
-                    >
-                      <Quote className="mb-2 h-4 w-4 text-primary/60" />
-                      <blockquote className="text-sm italic leading-relaxed text-foreground">
-                        "{q.quote}"
-                      </blockquote>
-                      {q.context && (
-                        <figcaption className="mt-2 text-xs text-muted-foreground">
-                          {q.context}
-                        </figcaption>
-                      )}
-                    </figure>
                   ))}
                 </div>
               </section>
