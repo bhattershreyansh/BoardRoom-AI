@@ -5,7 +5,7 @@ from conductor.models import SessionState, TurnScore
 # Decision Constants
 MAX_OFFTOPIC_TURNS = 1
 MAX_FOLLOW_UPS_PER_COMPETENCY = 2
-MIN_TURNS_BEFORE_CLOSE = 12
+MIN_TURNS_BEFORE_CLOSE = 17
 
 def contains_metrics(text: str) -> bool:
     """

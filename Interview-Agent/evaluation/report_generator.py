@@ -37,33 +37,80 @@ class ReportGenerator:
         }
         signal_header = signal_emojis.get(report.overall_signal.lower(), report.overall_signal.upper())
         
-        # Build scorecard table
-        scorecard_rows = []
+        # Helper for stars
+        def stars(val: int) -> str:
+            return "★" * val + "☆" * (5 - val)
+            
+        # Helper for radar bar
+        def make_radar_bar(score: float) -> str:
+            percentage = int((score / 5.0) * 100)
+            bars_count = int(percentage / 10)
+            return "█" * bars_count + "░" * (10 - bars_count)
+
+        # Build Executive Radar
+        radar_rows = []
         for comp, item in report.scorecard.items():
             formatted_name = comp.replace("_", " ").title()
-            scorecard_rows.append(
-                f"| **{formatted_name}** | {item.average_score}/5 | `{item.grade}` | {item.candidate_turns_count} |"
+            radar_rows.append(
+                f"{formatted_name:<25} {make_radar_bar(item.average_score)} {int((item.average_score / 5.0) * 100)}"
             )
-        scorecard_table = "\n".join(scorecard_rows)
+        radar_block = "\n".join(radar_rows)
 
-        # Build detailed notes section
+        # Build Decision Matrix
+        matrix_rows = []
+        for comp, item in report.scorecard.items():
+            formatted_name = comp.replace("_", " ").title()
+            matrix_rows.append(
+                f"| **{formatted_name}** | {item.candidate_turns_count} | `{item.grade}` | {item.strategic_framework} | {item.real_example} | {item.metrics} | {item.confidence} |"
+            )
+        decision_matrix_table = "\n".join(matrix_rows)
+
+        # Build detailed notes section (linking subcomponents & notes)
         details_list = []
         for comp in report.scorecard.keys():
             formatted_name = comp.replace("_", " ").title()
+            item = report.scorecard[comp]
             note = report.competency_notes.get(comp, "No notes available.")
             
             details_list.append(f"""
 ### 🎯 {formatted_name}
-* **Score**: {report.scorecard[comp].average_score}/5 (`{report.scorecard[comp].grade}`)
+* **Score**: {item.average_score}/5 (`{item.grade}`)
 * **Assessor Note**: {note}
+* **Criteria Scoring**:
+  - Strategic Framework: `{item.strategic_framework}`
+  - Real Example: `{item.real_example}`
+  - Metrics: `{item.metrics}`
+  - Candidate Confidence: `{item.confidence}`
 """)
         details_section = "\n".join(details_list)
 
         # Build key strengths list
-        strengths_list = "\n".join([f"- {s}" for s in report.key_strengths])
+        strengths_rows = []
+        for s in report.key_strengths:
+            strengths_rows.append(f"""
+#### 🟢 {s.name}
+- **Assessment**: {s.explanation}
+- **Evidence**: *"{s.evidence}"*
+""")
+        strengths_section = "\n".join(strengths_rows)
         
         # Build key risks list
-        risks_list = "\n".join([f"- {r}" for r in report.key_risks])
+        risks_rows = []
+        severity_colors = {"high": "🔴 HIGH", "medium": "🟡 MEDIUM", "low": "🟢 LOW"}
+        for r in report.key_risks:
+            sev_tag = severity_colors.get(r.severity.lower(), r.severity.upper())
+            risks_rows.append(f"""
+#### {sev_tag} - {r.name}
+- **Reason**: {r.reason}
+- **Evidence / Observed Behavior**: *"{r.evidence}"*
+""")
+        risks_section = "\n".join(risks_rows)
+
+        # Build observations
+        obs_list = "\n".join([f"- {o}" for o in report.interviewer_observations])
+
+        # Build recommended next topics
+        topics_list = "\n".join([f"- {t}" for t in report.recommended_topics])
 
         # Build transcript appendix
         transcript_rows = []
@@ -81,28 +128,65 @@ class ReportGenerator:
 
 ## 📊 Summary Scorecard
 
-| Overall Hiring Signal | Recommended Action |
-|:---|:---|
-| **{signal_header}** | **`{report.recommended_next_step.upper()}`** |
+| Overall Hiring Signal | Recommended Action | Hiring Confidence |
+|:---|:---|:---|
+| **{signal_header}** | **`{report.recommended_next_step.upper()}`** | **`{report.hiring_confidence_score}%`** |
 
 ### Executive Summary
 {report.executive_summary}
 
-### Key Strengths
-{strengths_list}
+### Recommendation Details
+**Hiring Confidence Reasoning**: {report.hiring_confidence_reasoning}
 
-### Risks & Concerns
-{risks_list}
+**Next Step Guidance**:
+{report.detailed_recommendation}
 
-### 🧠 Behavioral & Integrity Indicators
-* **Speaking Confidence**: `{report.behavioral_indicators.overall_confidence}`
-* **Rehearsed/Scripted Answers Flagged**: `{report.behavioral_indicators.rehearsed_answers_count}`
-* **Evasive/Off-Topic Responses Flagged**: `{report.behavioral_indicators.evasive_answers_count}`
+---
 
-### Competency Breakdown
-| Competency | Score | Grade | Turns Scored |
-|:---|:---|:---|:---|
-{scorecard_table}
+## 📡 Executive Radar
+```text
+{radar_block}
+```
+
+---
+
+## 🏆 Key Strengths
+{strengths_section}
+
+---
+
+## ⚠️ Risks & Concerns
+{risks_section}
+
+---
+
+## 🧠 Behavioral & Integrity Indicators
+| Trait | Rating |
+| :--- | :--- |
+| **Communication** | `{stars(report.behavioral_indicators.communication)}` |
+| **Executive Presence** | `{stars(report.behavioral_indicators.executive_presence)}` |
+| **Confidence Under Pressure** | `{stars(report.behavioral_indicators.confidence_under_pressure)}` |
+| **Strategic Thinking** | `{stars(report.behavioral_indicators.strategic_thinking)}` |
+| **Ownership** | `{stars(report.behavioral_indicators.ownership)}` |
+| **Decision Making** | `{stars(report.behavioral_indicators.decision_making)}` |
+| **Influencing** | `{stars(report.behavioral_indicators.influencing)}` |
+
+---
+
+## 📋 Interviewer Observations
+{obs_list}
+
+---
+
+## 🎯 Next Round Recommended Topics
+{topics_list}
+
+---
+
+## 🔍 Competency Decision Matrix
+| Competency | Turns Scored | Grade | Strategic Framework | Real Example | Metrics | Confidence |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+{decision_matrix_table}
 
 ---
 

@@ -49,9 +49,10 @@ class EvaluationAggregator:
         scorecard: Dict[str, CompetencyScorecardItem]
     ) -> QualitativeAssessment:
         """
-        Runs the LLM pass to generate the executive summary, assessor notes, and extract key quotes.
+        Runs the LLM pass to generate the executive summary, assessor notes, strengths/risks with evidence,
+        behavioral indicators, and next interview guidelines.
         """
-        logger.info("Generating qualitative post-interview assessment...")
+        logger.info("Generating qualitative recruiter-grade post-interview assessment...")
         
         # Format transcript for prompt
         transcript_str = "\n".join([
@@ -74,8 +75,8 @@ class EvaluationAggregator:
 
         schema_json = json.dumps(QualitativeAssessment.model_json_schema(), indent=2)
 
-        prompt = f"""You are an elite executive search partner writing a post-interview assessment report.
-Analyze the candidate's responses in the transcript and compile a qualitative evaluation.
+        prompt = f"""You are an elite executive search partner writing a premium candidate evaluation report for the Board and CEO.
+Analyze the candidate's responses in the transcript and compile a rigorous, highly credible recruiter-grade qualitative evaluation.
 
 === CANDIDATE & JD ===
 Candidate: {profile.candidate.full_name}
@@ -91,12 +92,36 @@ Mandate: {profile.jd.mandate}
 === FULL TRANSCRIPT ===
 {transcript_str}
 
+CRITICAL RULES FOR RECRUITER WRITING STYLE:
+1. **Recruiter Vocabulary**: Banish simple or negative words like "poor", "weak", "bad", "terrible", and "low confidence". Replace them with objective, soft, and sophisticated recruiter prose:
+   - Instead of "poor brand positioning", write: "Limited evidence demonstrated in brand strategy during the session."
+   - Instead of "weak product marketing", write: "Insufficient depth shown in product marketing frameworks."
+   - Instead of "bad answers", write: "Needs stronger examples to support assertions."
+   - Instead of "low confidence", write: "Partially demonstrated confidence under pressure."
+2. **Evidence & Quotes**: Every single strength and risk item MUST include a verbatim quote snippet from the candidate in the `evidence` field.
+   - Example Strength Evidence: "We increased marketing-sourced pipeline by 170%."
+   - Example Risk Evidence: "Candidate focused on ABM execution instead of messaging framework."
+3. **Transparent Score Breakdown**: For each competency in the scorecard, assess the candidate's performance across four criteria inside the `scorecard_details` mapping:
+   - `strategic_framework`: "Exceptional" | "Strong" | "Moderate" | "Weak" | "Poor"
+   - `real_example`: "Exceptional" | "Strong" | "Moderate" | "Weak" | "Poor"
+   - `metrics`: "Exceptional" | "Strong" | "Moderate" | "Weak" | "Poor"
+   - `confidence`: "High" | "Medium" | "Low"
+4. **Behavioral Indicators**: Grade the candidate's general C-suite soft traits (from 1 to 5 stars) based on their transcript performance:
+   - `communication` (Articulate, clear, well-paced)
+   - `executive_presence` (Authority, executive tone, mature)
+   - `confidence_under_pressure` (Handling prompt push-backs)
+   - `strategic_thinking` (Trade-offs, high-level business vision)
+   - `ownership` (Taking responsibility for failures/outcomes)
+   - `decision_making` (Clear prioritization models)
+   - `influencing` (Stakeholder alignment strategy)
+
 INSTRUCTIONS:
-1. Provide a one-paragraph executive_summary evaluating the candidate against the role requirements.
-2. Decide the overall_signal ("strong", "mixed", "weak") and recommended_next_step ("progress", "hold", "reject") based on the scorecard scores and transcript depth.
-3. For each competency listed in the scorecard, provide a 2-3 sentence competency_note explaining the score and their grasp of the topic. Do NOT extract any verbatim quotes.
-4. Provide a list of key_strengths (3-4 bullet points detailing high-level positive signals or competencies demonstrated by the candidate).
-5. Provide a list of key_risks (2-3 bullet points detailing strategic concerns, weak technical justifications, or metric gaps).
+1. Provide a one-paragraph executive_summary summarizing if the candidate fits the mandate and company stage.
+2. Provide 3-4 structured key_strengths (detailed explanations with verbatim quote evidence).
+3. Provide 2-3 structured key_risks (must include a severity rating "high" | "medium" | "low", detailed reason, and verbatim quote/observational evidence).
+4. Provide a general list of 3-4 interviewer_observations (e.g. "Candidate consistently answered with metrics. Needed probing before discussing tradeoffs.").
+5. Provide a hiring_confidence_score (int between 0 and 100) and hiring_confidence_reasoning explaining the score.
+6. Provide a detailed_recommendation (conditional hiring action, e.g. "Hold - Advance only if the next interview validates...") and a list of 3-4 recommended_topics to probe next.
 
 You MUST return the output as a valid JSON object matching this exact format:
 {schema_json}
@@ -116,13 +141,34 @@ You MUST return the output as a valid JSON object matching this exact format:
         except Exception as e:
             logger.error(f"Failed to generate qualitative assessment: {e}")
             # Fallback output on failure
+            from evaluation.models import BehavioralIndicators
             return QualitativeAssessment(
                 overall_signal="mixed",
                 executive_summary=f"Evaluation generated with manual fallback due to assessment error: {str(e)}",
                 competency_notes={c: "Score calculated programmatically. Assessor notes unavailable." for c in scorecard.keys()},
-                key_strengths=["Fallback strength: Check individual scorecards."],
-                key_risks=["Fallback risk: Assessment error during processing."],
-                recommended_next_step="hold"
+                key_strengths=[],
+                key_risks=[],
+                recommended_next_step="hold",
+                hiring_confidence_score=50,
+                hiring_confidence_reasoning="Manual fallback due to assessment error.",
+                detailed_recommendation="Hold - Re-evaluate after system stability is verified.",
+                recommended_topics=["System diagnostics", "Verification of interview logs"],
+                interviewer_observations=["Manual fallback assessment triggered."],
+                behavioral_indicators=BehavioralIndicators(
+                    communication=3,
+                    executive_presence=3,
+                    confidence_under_pressure=3,
+                    strategic_thinking=3,
+                    ownership=3,
+                    decision_making=3,
+                    influencing=3
+                ),
+                scorecard_details={c: {
+                    "strategic_framework": "Moderate",
+                    "real_example": "Moderate",
+                    "metrics": "Moderate",
+                    "confidence": "Medium"
+                } for c in scorecard.keys()}
             )
 
     async def aggregate_report(self, profile: CandidateProfile, state: SessionState) -> FinalEvaluationReport:
@@ -132,26 +178,19 @@ You MUST return the output as a valid JSON object matching this exact format:
         scorecard = self.calculate_scorecard(state.turn_scores)
         qualitative = await self.generate_qualitative_assessment(profile, state, scorecard)
         
-        # Calculate behavioral indicators
-        rehearsed_count = sum(1 for ts in state.turn_scores if ts.is_rehearsed)
-        evasive_count = sum(1 for ts in state.turn_scores if ts.composite < 2.5)
-        
-        conf_map = {"High": 3, "Medium": 2, "Low": 1}
-        conf_values = [conf_map.get(ts.confidence, 2) for ts in state.turn_scores]
-        avg_conf = sum(conf_values) / len(conf_values) if conf_values else 2.0
-        if avg_conf >= 2.5:
-            overall_conf = "High"
-        elif avg_conf >= 1.5:
-            overall_conf = "Medium"
-        else:
-            overall_conf = "Low"
-            
-        from evaluation.models import BehavioralIndicators
-        behavioral = BehavioralIndicators(
-            overall_confidence=overall_conf,
-            rehearsed_answers_count=rehearsed_count,
-            evasive_answers_count=evasive_count
-        )
+        # Enrich scorecard with qualitative sub-component details
+        enriched_scorecard = {}
+        for comp, item in scorecard.items():
+            details = qualitative.scorecard_details.get(comp, {})
+            enriched_scorecard[comp] = CompetencyScorecardItem(
+                average_score=item.average_score,
+                grade=item.grade,
+                candidate_turns_count=item.candidate_turns_count,
+                strategic_framework=details.get("strategic_framework", "Moderate"),
+                real_example=details.get("real_example", "Moderate"),
+                metrics=details.get("metrics", "Moderate"),
+                confidence=details.get("confidence", "Medium")
+            )
         
         # Format transcript as simple list of dicts for storage
         transcript_list = [{"speaker": t.speaker, "text": t.text} for t in state.full_transcript]
@@ -163,10 +202,15 @@ You MUST return the output as a valid JSON object matching this exact format:
             overall_signal=qualitative.overall_signal,
             executive_summary=qualitative.executive_summary,
             recommended_next_step=qualitative.recommended_next_step,
-            scorecard=scorecard,
+            scorecard=enriched_scorecard,
             competency_notes=qualitative.competency_notes,
             key_strengths=qualitative.key_strengths,
             key_risks=qualitative.key_risks,
-            behavioral_indicators=behavioral,
+            behavioral_indicators=qualitative.behavioral_indicators,
+            hiring_confidence_score=qualitative.hiring_confidence_score,
+            hiring_confidence_reasoning=qualitative.hiring_confidence_reasoning,
+            detailed_recommendation=qualitative.detailed_recommendation,
+            recommended_topics=qualitative.recommended_topics,
+            interviewer_observations=qualitative.interviewer_observations,
             full_transcript=transcript_list
         )
