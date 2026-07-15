@@ -6,3 +6,7 @@ architecture.md
 internals.md
 reports
 Interview-Agent/reports
+__pycache__/
+*.py[cod]
+*$py.class
+node_modules/*

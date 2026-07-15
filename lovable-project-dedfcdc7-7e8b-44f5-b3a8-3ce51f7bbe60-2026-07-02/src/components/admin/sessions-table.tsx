@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Eye, Inbox, Loader2, RefreshCw, ServerCrash, Trash2, Edit2, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { StatusPill } from "@/components/brand/status-pill";
-import { ReportModal } from "@/components/admin/report-modal";
 import { useSessions, useDeleteSession, useUpdateSession } from "@/hooks/use-sessions";
 import type { Session } from "@/lib/types";
 
@@ -27,7 +27,7 @@ function fmtTime(value: string) {
 
 export function SessionsTable({ filter }: { filter?: "upcoming" | "completed" | "candidates" }) {
   const { data, isLoading, isError, refetch, isFetching } = useSessions();
-  const [reportId, setReportId] = useState<string | null>(null);
+  const navigate = useNavigate();
   const [editSession, setEditSession] = useState<Session | null>(null);
 
   let filteredData = data || [];
@@ -115,13 +115,13 @@ export function SessionsTable({ filter }: { filter?: "upcoming" | "completed" | 
 
                   <div className="shrink-0">
                     {filter === "candidates" ? (
-                      <Button variant="outline" size="sm" onClick={() => setReportId(s.session_id)}>
+                      <Button variant="outline" size="sm" onClick={() => navigate({ to: "/admin/report/$sessionId", params: { sessionId: s.session_id } })}>
                         View Profile
                       </Button>
                     ) : (
-                      <RowAction 
-                        session={s} 
-                        onView={() => setReportId(s.session_id)} 
+                      <RowAction
+                        session={s}
+                        onView={() => navigate({ to: "/admin/report/$sessionId", params: { sessionId: s.session_id } })}
                         onEdit={() => setEditSession(s)}
                       />
                     )}
@@ -133,7 +133,6 @@ export function SessionsTable({ filter }: { filter?: "upcoming" | "completed" | 
         )}
       </div>
 
-      <ReportModal sessionId={reportId} onClose={() => setReportId(null)} />
       <EditModal session={editSession} onClose={() => setEditSession(null)} />
     </>
   );
