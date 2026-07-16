@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Eye, Inbox, Loader2, RefreshCw, ServerCrash, Trash2, Edit2, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Dialog,
   DialogContent,
@@ -15,19 +16,18 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { StatusPill } from "@/components/brand/status-pill";
-import { ReportModal } from "@/components/admin/report-modal";
 import { useSessions, useDeleteSession, useUpdateSession } from "@/hooks/use-sessions";
 import type { Session } from "@/lib/types";
 
 function fmtTime(value: string) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value || "—";
-  return format(d, "MMM d, yyyy · h:mm a");
+  return format(d, "MMM d, yyyy");
 }
 
 export function SessionsTable({ filter }: { filter?: "upcoming" | "completed" | "candidates" }) {
   const { data, isLoading, isError, refetch, isFetching } = useSessions();
-  const [reportId, setReportId] = useState<string | null>(null);
+  const navigate = useNavigate();
   const [editSession, setEditSession] = useState<Session | null>(null);
 
   let filteredData = data || [];
@@ -115,13 +115,13 @@ export function SessionsTable({ filter }: { filter?: "upcoming" | "completed" | 
 
                   <div className="shrink-0">
                     {filter === "candidates" ? (
-                      <Button variant="outline" size="sm" onClick={() => setReportId(s.session_id)}>
+                      <Button variant="outline" size="sm" onClick={() => navigate({ to: "/admin/report/$sessionId", params: { sessionId: s.session_id } })}>
                         View Profile
                       </Button>
                     ) : (
-                      <RowAction 
-                        session={s} 
-                        onView={() => setReportId(s.session_id)} 
+                      <RowAction
+                        session={s}
+                        onView={() => navigate({ to: "/admin/report/$sessionId", params: { sessionId: s.session_id } })}
                         onEdit={() => setEditSession(s)}
                       />
                     )}
@@ -133,7 +133,6 @@ export function SessionsTable({ filter }: { filter?: "upcoming" | "completed" | 
         )}
       </div>
 
-      <ReportModal sessionId={reportId} onClose={() => setReportId(null)} />
       <EditModal session={editSession} onClose={() => setEditSession(null)} />
     </>
   );
@@ -218,7 +217,6 @@ function EditModal({ session, onClose }: EditModalProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Parse time and date from ISO when session is loaded
@@ -230,7 +228,6 @@ function EditModal({ session, onClose }: EditModalProps) {
         const d = new Date(session.scheduled_time);
         if (!Number.isNaN(d.getTime())) {
           setDate(d.toISOString().split("T")[0]);
-          setTime(d.toTimeString().split(" ")[0].slice(0, 5));
         }
       }
     }
@@ -240,14 +237,14 @@ function EditModal({ session, onClose }: EditModalProps) {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !date || !time) {
+    if (!name.trim() || !email.trim() || !date) {
       toast.error("Please fill out all fields.");
       return;
     }
 
     setIsUpdating(true);
     try {
-      const combinedDateTime = new Date(`${date}T${time}:00`);
+      const combinedDateTime = new Date(date);
       await updateSession.mutateAsync({
         sessionId: session.session_id,
         payload: {
@@ -292,38 +289,20 @@ function EditModal({ session, onClose }: EditModalProps) {
               disabled={isUpdating}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-date" className="text-foreground">Date</Label>
-              <div className="relative group">
-                <Input 
-                  id="edit-date" 
-                  type="date" 
-                  value={date} 
-                  onChange={(e) => setDate(e.target.value)} 
-                  onClick={(e) => "showPicker" in HTMLInputElement.prototype && e.currentTarget.showPicker()}
-                  onKeyDown={(e) => e.preventDefault()}
-                  disabled={isUpdating}
-                  className="w-full pl-10 cursor-pointer text-foreground transition-all group-hover:border-primary/40"
-                />
-                <CalendarClock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-hover:text-primary/70" />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-time" className="text-foreground">Time</Label>
-              <div className="relative group">
-                <Input 
-                  id="edit-time" 
-                  type="time" 
-                  value={time} 
-                  onChange={(e) => setTime(e.target.value)} 
-                  onClick={(e) => "showPicker" in HTMLInputElement.prototype && e.currentTarget.showPicker()}
-                  onKeyDown={(e) => e.preventDefault()}
-                  disabled={isUpdating}
-                  className="w-full pl-10 cursor-pointer text-foreground transition-all group-hover:border-primary/40"
-                />
-                <CalendarClock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-hover:text-primary/70" />
-              </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-date" className="text-foreground">Date</Label>
+            <div className="relative group">
+              <Input 
+                id="edit-date" 
+                type="date" 
+                value={date} 
+                onChange={(e) => setDate(e.target.value)} 
+                onClick={(e) => "showPicker" in HTMLInputElement.prototype && e.currentTarget.showPicker()}
+                onKeyDown={(e) => e.preventDefault()}
+                disabled={isUpdating}
+                className="w-full pl-10 cursor-pointer text-foreground transition-all group-hover:border-primary/40"
+              />
+              <CalendarClock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-hover:text-primary/70" />
             </div>
           </div>
           <DialogFooter className="pt-2">

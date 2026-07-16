@@ -40,7 +40,7 @@ function InterviewPage() {
   const { session_id } = Route.useParams();
   const navigate = useNavigate();
 
-  const { data: sessions } = useSessions();
+  const { data: sessions, isLoading } = useSessions();
   const session = sessions?.find((s) => s.session_id === session_id);
   const candidateName = session?.candidate_name ?? "Candidate";
 
@@ -179,7 +179,18 @@ function InterviewPage() {
 
       <main className="flex flex-1 items-center justify-center px-4 py-10">
         <AnimatePresence mode="wait">
-          {session?.status === "completed" || stage === "ended" ? (
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center gap-4"
+            >
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm font-medium text-muted-foreground">Loading session details…</p>
+            </motion.div>
+          ) : session?.status === "completed" || stage === "ended" ? (
             <EndedState key="ended" />
           ) : stage === "waiting" || stage === "connecting" ? (
             <WaitingRoom

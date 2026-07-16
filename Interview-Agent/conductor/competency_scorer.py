@@ -15,7 +15,7 @@ class CompetencyScorer:
         self.client = AsyncGroq(api_key=settings.groq_api_key)
         # Using a fast model for background scoring to keep it swift and cheap
         self.model = settings.groq_competency_model
-        self.probe_threshold = 3.0
+        self.probe_threshold = 3.5
 
     async def score_turn(
         self, 
@@ -39,6 +39,10 @@ You must grade the response on 5 signals from 1 to 5 (1 = Very Poor, 5 = Excepti
 4. relevance: Did they answer the actual question asked?
 5. depth: Did they show deep expertise and survive follow-up details? (If this is not a follow-up, grade neutral 3 or higher based on depth of the answer).
 
+You must also evaluate:
+- confidence: "high", "medium", or "low" (High if they speak with specific concrete evidence and clear metrics; Low if they are defensive, vague, or lack detailed knowledge).
+- is_rehearsed: true if the answer sounds memorized, uses generic textbook corporate buzzwords without showing actual personal execution, or avoids real-world context; false otherwise.
+
 You MUST return the output as a valid JSON object matching this exact format:
 {{
   "scores": {{
@@ -48,7 +52,9 @@ You MUST return the output as a valid JSON object matching this exact format:
     "relevance": 3,
     "depth": 3
   }},
-  "rationale": "A brief explanation of the grades assigned."
+  "rationale": "A brief explanation of the grades assigned.",
+  "confidence": "high",
+  "is_rehearsed": false
 }}
 
 === CONTEXT ===
@@ -75,7 +81,8 @@ Candidate Answer: {answer}
             validated_scores = {k: scores.get(k, 3) for k in required_keys}
             
             composite = round(sum(validated_scores.values()) / len(validated_scores), 2)
-            probe_needed = composite < self.probe_threshold
+            # Stricter probing threshold (if composite < 3.5 instead of 3.0)
+            probe_needed = composite < self.probe_threshold or raw_output.is_rehearsed
             
             turn_score = TurnScore(
                 turn_id=turn_id,
@@ -83,7 +90,9 @@ Candidate Answer: {answer}
                 scores=validated_scores,
                 composite=composite,
                 probe_needed=probe_needed,
-                rationale=raw_output.rationale
+                rationale=raw_output.rationale,
+                confidence=raw_output.confidence,
+                is_rehearsed=raw_output.is_rehearsed
             )
             
             logger.info(f"Turn {turn_id} scoring complete. Composite: {composite}, Probe Needed: {probe_needed}")

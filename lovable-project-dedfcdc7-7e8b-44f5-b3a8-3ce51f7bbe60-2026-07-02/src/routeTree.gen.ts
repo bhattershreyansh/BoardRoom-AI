@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InterviewSession_idRouteImport } from './routes/interview.$session_id'
+import { Route as AdminReportSessionIdRouteImport } from './routes/admin_.report.$sessionId'
 
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
@@ -28,35 +29,50 @@ const InterviewSession_idRoute = InterviewSession_idRouteImport.update({
   path: '/interview/$session_id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminReportSessionIdRoute = AdminReportSessionIdRouteImport.update({
+  id: '/admin_/report/$sessionId',
+  path: '/admin/report/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/interview/$session_id': typeof InterviewSession_idRoute
+  '/admin/report/$sessionId': typeof AdminReportSessionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/interview/$session_id': typeof InterviewSession_idRoute
+  '/admin/report/$sessionId': typeof AdminReportSessionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/interview/$session_id': typeof InterviewSession_idRoute
+  '/admin_/report/$sessionId': typeof AdminReportSessionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/interview/$session_id'
+  fullPaths:
+    '/' | '/admin' | '/interview/$session_id' | '/admin/report/$sessionId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/interview/$session_id'
-  id: '__root__' | '/' | '/admin' | '/interview/$session_id'
+  to: '/' | '/admin' | '/interview/$session_id' | '/admin/report/$sessionId'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/interview/$session_id'
+    | '/admin_/report/$sessionId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   InterviewSession_idRoute: typeof InterviewSession_idRoute
+  AdminReportSessionIdRoute: typeof AdminReportSessionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +98,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InterviewSession_idRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin_/report/$sessionId': {
+      id: '/admin_/report/$sessionId'
+      path: '/admin/report/$sessionId'
+      fullPath: '/admin/report/$sessionId'
+      preLoaderRoute: typeof AdminReportSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +112,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   InterviewSession_idRoute: InterviewSession_idRoute,
+  AdminReportSessionIdRoute: AdminReportSessionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -297,13 +297,8 @@ async def get_session_report(session_id: str, db: AsyncSession = Depends(get_db)
             "note": note_text
         })
 
-    # Format key quotes
+    # Format key quotes (deprecated, kept empty for backward compatibility)
     key_quotes = []
-    for comp_key, quote_text in raw_report.get("key_quotes", {}).items():
-        key_quotes.append({
-            "quote": quote_text,
-            "context": comp_key.replace("_", " ").title()
-        })
 
     # Map backend overall signal ("strong" | "mixed" | "weak") to frontend values
     raw_signal = raw_report.get("overall_signal", "mixed").lower()
@@ -314,6 +309,21 @@ async def get_session_report(session_id: str, db: AsyncSession = Depends(get_db)
     }
     overall_signal = signal_map.get(raw_signal, "lean_hire")
 
+    # Format scorecard details for Decision Matrix
+    scorecard = raw_report.get("scorecard", {})
+    scorecard_details = []
+    for comp_key, item in scorecard.items():
+        scorecard_details.append({
+            "competency": comp_key.replace("_", " ").title(),
+            "score": item.get("average_score", 0.0),
+            "grade": item.get("grade", "Adequate"),
+            "turns_count": item.get("candidate_turns_count", 0),
+            "strategic_framework": item.get("strategic_framework", "Moderate"),
+            "real_example": item.get("real_example", "Moderate"),
+            "metrics": item.get("metrics", "Moderate"),
+            "confidence": item.get("confidence", "Medium")
+        })
+
     return {
         "session_id": str(db_session.id),
         "candidate_name": db_session.candidate_name,
@@ -322,7 +332,23 @@ async def get_session_report(session_id: str, db: AsyncSession = Depends(get_db)
         "overall_signal": overall_signal,
         "recommended_next_step": raw_report.get("recommended_next_step", "hold"),
         "competency_notes": competency_notes,
-        "key_quotes": key_quotes
+        "key_strengths": raw_report.get("key_strengths", []),
+        "key_risks": raw_report.get("key_risks", []),
+        "behavioral_indicators": raw_report.get("behavioral_indicators", {
+            "communication": 3,
+            "executive_presence": 3,
+            "confidence_under_pressure": 3,
+            "strategic_thinking": 3,
+            "ownership": 3,
+            "decision_making": 3,
+            "influencing": 3
+        }),
+        "hiring_confidence_score": raw_report.get("hiring_confidence_score", 50),
+        "hiring_confidence_reasoning": raw_report.get("hiring_confidence_reasoning", ""),
+        "detailed_recommendation": raw_report.get("detailed_recommendation", ""),
+        "recommended_topics": raw_report.get("recommended_topics", []),
+        "interviewer_observations": raw_report.get("interviewer_observations", []),
+        "scorecard_details": scorecard_details
     }
 
 @router.get("")

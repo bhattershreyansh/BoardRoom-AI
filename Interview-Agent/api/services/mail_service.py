@@ -55,7 +55,7 @@ class MailService:
         recipient_email: str, 
         session_id: str, 
         role_type: str, 
-        scheduled_time_str: str
+        scheduled_time_str: str = ""
     ):
         """Asynchronously dispatches the interview invitation email."""
         interview_link = f"{settings.frontend_url}/interview/{session_id}"
@@ -71,11 +71,11 @@ class MailService:
                 <p>You have been scheduled for an AI-led technical interview for the <strong>{role_type}</strong> position.</p>
                 
                 <div style="background-color: #f7fafc; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #3182ce;">
-                    <p style="margin: 0 0 10px 0;"><strong>Scheduled Time:</strong> {scheduled_time_str}</p>
+                    <p style="margin: 0 0 10px 0;"><strong>Validity:</strong> The interview link is active and can be completed within 48 hours from when you receive this email.</p>
                     <p style="margin: 0;"><strong>Format:</strong> Voice-to-Voice AI Interview (approx. 45 minutes)</p>
                 </div>
                 
-                <p>When you are ready to begin at your scheduled time, please click the button below to join the session:</p>
+                <p>When you are ready to begin, please click the button below to join the session:</p>
                 
                 <div style="text-align: center; margin: 30px 0;">
                     <a href="{interview_link}" style="background-color: #3182ce; color: #ffffff; padding: 12px 24px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; border-radius: 6px; font-weight: bold;">Join Interview Room</a>

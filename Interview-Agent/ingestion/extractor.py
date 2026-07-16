@@ -21,10 +21,9 @@ class ProfileExtractor:
 Analyze the following Job Description and extract structured interview configuration.
 
 Rules for competency_weights:
-- Assign 0.0–1.0 based on how central each competency is to THIS role
-- At least one competency must be 1.0 (the most critical)
-- Do not assign the same weight to more than 2 competencies
-- Base weights on the actual mandate, not generic CXO assumptions
+- Identify 3-4 dynamic functional/technical competencies specific to the role (e.g. 'brand_strategy', 'product_marketing' for CMO, or 'system_architecture', 'infrastructure_scaling' for CTO).
+- Do NOT output core executive traits: strategic thinking, people leadership, board communication, financial acumen, stakeholder management, change management (these are hardcoded elsewhere).
+- Assign weights between 1.0 and 1.5 based on how central each is to this job.
 
 Rules for mandatory_probes:
 - Only include things explicitly required by the JD, not assumptions
@@ -50,7 +49,25 @@ Job Description:
                 temperature=0.1
             )
             raw_json = response.choices[0].message.content
-            return JDConfig.model_validate_json(raw_json)
+            jd_config = JDConfig.model_validate_json(raw_json)
+            
+            # Blend in Core C-Suite Competencies programmatically
+            core_competencies = {
+                "strategic_thinking": 1.0,
+                "people_leadership": 1.0,
+                "board_communication": 1.0,
+                "financial_acumen": 1.0,
+                "stakeholder_management": 1.0,
+                "change_management": 1.0
+            }
+            
+            # Merge core into competency_weights
+            for key, val in core_competencies.items():
+                if key not in jd_config.competency_weights:
+                    jd_config.competency_weights[key] = val
+                    
+            logger.info(f"Blended JD Config with Core C-Suite Competencies: {list(jd_config.competency_weights.keys())}")
+            return jd_config
         except Exception as e:
             logger.error(f"Failed to analyze JD: {e}")
             raise

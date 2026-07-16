@@ -52,6 +52,40 @@ export type OverallSignal =
   | "lean_no_hire"
   | string;
 
+export interface BehavioralIndicators {
+  communication: number;
+  executive_presence: number;
+  confidence_under_pressure: number;
+  strategic_thinking: number;
+  ownership: number;
+  decision_making: number;
+  influencing: number;
+}
+
+export interface StrengthItem {
+  name: string;
+  explanation: string;
+  evidence: string;
+}
+
+export interface RiskItem {
+  name: string;
+  severity: "high" | "medium" | "low" | string;
+  reason: string;
+  evidence: string;
+}
+
+export interface ScorecardDetail {
+  competency: string;
+  score: number;
+  grade: string;
+  turns_count: number;
+  strategic_framework: string;
+  real_example: string;
+  metrics: string;
+  confidence: string;
+}
+
 export interface Report {
   session_id?: string;
   candidate_name?: string;
@@ -60,5 +94,13 @@ export interface Report {
   overall_signal: OverallSignal;
   recommended_next_step: string;
   competency_notes: CompetencyNote[];
-  key_quotes: KeyQuote[];
+  key_strengths: StrengthItem[];
+  key_risks: RiskItem[];
+  behavioral_indicators: BehavioralIndicators;
+  hiring_confidence_score: number;
+  hiring_confidence_reasoning: string;
+  detailed_recommendation: string;
+  recommended_topics: string[];
+  interviewer_observations: string[];
+  scorecard_details: ScorecardDetail[];
 }

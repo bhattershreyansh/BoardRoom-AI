@@ -1,7 +1,19 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
-import { CalendarClock, Loader2, Send, Sparkles } from "lucide-react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  ChevronRight,
+  FileText,
+  Loader2,
+  Mail,
+  Send,
+  Sparkles,
+  User,
+  XCircle,
+  Briefcase,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,15 +26,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FileDropzone } from "@/components/admin/file-dropzone";
 import { useIngestSession, useSessionStatus } from "@/hooks/use-sessions";
 import type { RoleType } from "@/lib/types";
 
-const ROLES: { value: RoleType; label: string }[] = [
-  { value: "CTO", label: "Chief Technology Officer (CTO)" },
-  { value: "CEO", label: "Chief Executive Officer (CEO)" },
-  { value: "CMO", label: "Chief Marketing Officer (CMO)" },
+const ROLES: { value: RoleType; label: string; desc: string }[] = [
+  { value: "CTO", label: "Chief Technology Officer", desc: "Engineering & Technology leadership" },
+  { value: "CEO", label: "Chief Executive Officer", desc: "Corporate strategy & operations" },
+  { value: "CMO", label: "Chief Marketing Officer", desc: "Marketing & brand leadership" },
 ];
 
 const schema = z.object({
@@ -30,15 +41,25 @@ const schema = z.object({
   candidate_email: z.string().trim().email("Enter a valid email").max(255),
   role_type: z.string().min(1, "Select a target role"),
   scheduled_date: z.string().min(1, "Pick a date"),
-  scheduled_time: z.string().min(1, "Pick a time"),
 });
 
-export function ScheduleForm() {
+function StepBadge({ number, label }: { number: number; label: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-5">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-sm">
+        {number}
+      </div>
+      <span className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
+      <div className="flex-1 h-px bg-border" />
+    </div>
+  );
+}
+
+export function ScheduleForm({ fullScreen = false }: { fullScreen?: boolean }) {
   const [roleType, setRoleType] = useState<string>("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [scheduledDate, setScheduledDate] = useState("");
-  const [scheduledTime, setScheduledTime] = useState("");
   const [resume, setResume] = useState<File | null>(null);
   const [jdMode, setJdMode] = useState<"text" | "file">("text");
   const [jdText, setJdText] = useState("");
@@ -52,15 +73,8 @@ export function ScheduleForm() {
   const isProcessing = !!processingId && !isTerminal;
 
   const reset = () => {
-    setRoleType("");
-    setName("");
-    setEmail("");
-    setScheduledDate("");
-    setScheduledTime("");
-    setResume(null);
-    setJdText("");
-    setJdFile(null);
-    setJdMode("text");
+    setRoleType(""); setName(""); setEmail(""); setScheduledDate("");
+    setResume(null); setJdText(""); setJdFile(null); setJdMode("text");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,7 +84,6 @@ export function ScheduleForm() {
       candidate_email: email,
       role_type: roleType,
       scheduled_date: scheduledDate,
-      scheduled_time: scheduledTime,
     });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
@@ -84,9 +97,8 @@ export function ScheduleForm() {
       toast.error("Upload a JD file or switch to text");
       return;
     }
-
     try {
-      const combinedDateTime = new Date(`${parsed.data.scheduled_date}T${parsed.data.scheduled_time}:00`);
+      const combinedDateTime = new Date(parsed.data.scheduled_date);
       const res = await ingest.mutateAsync({
         candidate_name: parsed.data.candidate_name,
         candidate_email: parsed.data.candidate_email,
@@ -104,224 +116,300 @@ export function ScheduleForm() {
     }
   };
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="glass-card rounded-2xl p-6 sm:p-7"
-    >
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
-            New session
+  const formContent = (
+    <form onSubmit={handleSubmit} className="space-y-10">
+      {/* ─── Step 1: Role & Date ─── */}
+      <section>
+        <StepBadge number={1} label="Position & Timing" />
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          {/* Role picker as cards */}
+          <div className="sm:col-span-2 space-y-2">
+            <Label className="text-sm font-medium text-foreground">Target Role</Label>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {ROLES.map((r) => (
+                <button
+                  key={r.value}
+                  type="button"
+                  id={`role-${r.value}`}
+                  onClick={() => setRoleType(r.value)}
+                  className={`group relative flex flex-col items-start gap-1.5 rounded-xl border p-4 text-left transition-all duration-200 ${
+                    roleType === r.value
+                      ? "border-primary bg-primary/8 shadow-sm ring-1 ring-primary/30"
+                      : "border-border bg-card hover:border-primary/40 hover:bg-accent/20"
+                  }`}
+                >
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+                    roleType === r.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                  }`}>
+                    <Briefcase className="h-4 w-4" />
+                  </div>
+                  <span className={`text-sm font-semibold leading-tight ${roleType === r.value ? "text-primary" : "text-foreground"}`}>
+                    {r.label}
+                  </span>
+                  <span className="text-xs text-muted-foreground leading-snug">{r.desc}</span>
+                  {roleType === r.value && (
+                    <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-primary" />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">
-            Schedule New Interview
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Set up an AI-led executive interview and send the invitation.
-          </p>
+
+          {/* Scheduled date */}
+          <div className="space-y-2">
+            <Label htmlFor="scheduled-date" className="text-sm font-medium text-foreground">
+              Interview Date
+            </Label>
+            <div className="relative group">
+              <CalendarDays className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+              <Input
+                id="scheduled-date"
+                type="date"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                onClick={(e) => "showPicker" in HTMLInputElement.prototype && e.currentTarget.showPicker()}
+                onKeyDown={(e) => e.preventDefault()}
+                className="pl-10 cursor-pointer transition-all hover:border-primary/40 focus:border-primary"
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {isProcessing ? (
-        <ProcessingState status={String(currentStatus ?? "processing")} />
-      ) : isTerminal ? (
-        <TerminalState
-          status={String(currentStatus)}
-          onReset={() => setProcessingId(null)}
-        />
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="role">Target Role</Label>
-              <Select value={roleType} onValueChange={setRoleType}>
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ROLES.map((r) => (
-                    <SelectItem key={r.value} value={r.value}>
-                      {r.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="scheduled-date" className="text-foreground">Scheduled Date</Label>
-              <div className="relative group">
-                <Input
-                  id="scheduled-date"
-                  type="date"
-                  value={scheduledDate}
-                  onChange={(e) => setScheduledDate(e.target.value)}
-                  onClick={(e) => "showPicker" in HTMLInputElement.prototype && e.currentTarget.showPicker()}
-                  onKeyDown={(e) => e.preventDefault()}
-                  className="w-full pl-10 cursor-pointer text-foreground transition-all group-hover:border-primary/40"
-                />
-                <CalendarClock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-hover:text-primary/70" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="scheduled-time" className="text-foreground">Scheduled Time</Label>
-              <div className="relative group">
-                <Input
-                  id="scheduled-time"
-                  type="time"
-                  value={scheduledTime}
-                  onChange={(e) => setScheduledTime(e.target.value)}
-                  onClick={(e) => "showPicker" in HTMLInputElement.prototype && e.currentTarget.showPicker()}
-                  onKeyDown={(e) => e.preventDefault()}
-                  className="w-full pl-10 cursor-pointer text-foreground transition-all group-hover:border-primary/40"
-                />
-                <CalendarClock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-hover:text-primary/70" />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Candidate Full Name</Label>
+      {/* ─── Step 2: Candidate Info ─── */}
+      <section>
+        <StepBadge number={2} label="Candidate Details" />
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-sm font-medium text-foreground">Full Name</Label>
+            <div className="relative group">
+              <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
               <Input
                 id="name"
                 placeholder="Jane Executive"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                className="pl-10 transition-all hover:border-primary/40 focus:border-primary"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Candidate Email</Label>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-sm font-medium text-foreground">Email Address</Label>
+            <div className="relative group">
+              <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
               <Input
                 id="email"
                 type="email"
                 placeholder="jane@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="pl-10 transition-all hover:border-primary/40 focus:border-primary"
               />
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:bg-accent/10">
+      {/* ─── Step 3: Documents ─── */}
+      <section>
+        <StepBadge number={3} label="Supporting Documents" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Resume */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-foreground">Candidate Resume</Label>
             <FileDropzone
               id="resume"
-              label="Resume Upload"
-              hint="PDF, DOC or DOCX"
+              label=""
+              hint="PDF, DOC or DOCX — max 10 MB"
               accept=".pdf,.doc,.docx"
               file={resume}
               onFileChange={setResume}
             />
           </div>
 
+          {/* JD */}
           <div className="space-y-2">
-            <Label>Job Description</Label>
-            <Tabs value={jdMode} onValueChange={(v) => setJdMode(v as "text" | "file")}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="text">Paste text</TabsTrigger>
-                <TabsTrigger value="file">Upload file</TabsTrigger>
-              </TabsList>
-              <TabsContent value="text" className="mt-3">
-                <Textarea
-                  placeholder="Paste the executive role's job description, mandate, and success criteria…"
-                  rows={5}
-                  value={jdText}
-                  onChange={(e) => setJdText(e.target.value)}
-                />
-              </TabsContent>
-              <TabsContent value="file" className="mt-3">
-                <FileDropzone
-                  id="jd-file"
-                  label=""
-                  hint="PDF, DOC or DOCX"
-                  accept=".pdf,.doc,.docx"
-                  file={jdFile}
-                  onFileChange={setJdFile}
-                />
-              </TabsContent>
-            </Tabs>
+            <Label className="text-sm font-medium text-foreground">Job Description</Label>
+            <div className="flex rounded-xl overflow-hidden border border-border bg-muted/30 mb-3">
+              <button
+                type="button"
+                onClick={() => setJdMode("text")}
+                className={`flex-1 py-2 text-xs font-semibold transition-all ${
+                  jdMode === "text"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Paste Text
+              </button>
+              <button
+                type="button"
+                onClick={() => setJdMode("file")}
+                className={`flex-1 py-2 text-xs font-semibold transition-all ${
+                  jdMode === "file"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Upload File
+              </button>
+            </div>
+            <AnimatePresence mode="wait">
+              {jdMode === "text" ? (
+                <motion.div
+                  key="text"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <Textarea
+                    placeholder="Paste the executive role's job description, mandate, and success criteria…"
+                    rows={fullScreen ? 7 : 5}
+                    value={jdText}
+                    onChange={(e) => setJdText(e.target.value)}
+                    className="resize-none transition-all hover:border-primary/40 focus:border-primary"
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="file"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <FileDropzone
+                    id="jd-file"
+                    label=""
+                    hint="PDF, DOC or DOCX — max 10 MB"
+                    accept=".pdf,.doc,.docx"
+                    file={jdFile}
+                    onFileChange={setJdFile}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
+        </div>
+      </section>
 
-          <Button
-            type="submit"
-            variant="default"
-            size="lg"
-            className="w-full"
-            disabled={ingest.isPending}
-          >
-            {ingest.isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Scheduling…
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4" />
-                Schedule &amp; Send Invitation Email
-              </>
-            )}
-          </Button>
-        </form>
+      {/* ─── Submit ─── */}
+      <div className="pt-2 border-t border-border">
+        <Button
+          id="schedule-submit"
+          type="submit"
+          size="lg"
+          className="w-full gap-2 rounded-xl py-6 text-base font-semibold shadow-md transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]"
+          disabled={ingest.isPending}
+        >
+          {ingest.isPending ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Scheduling Interview…
+            </>
+          ) : (
+            <>
+              <Send className="h-5 w-5" />
+              Schedule & Send Invitation
+              <ChevronRight className="h-4 w-4 opacity-70" />
+            </>
+          )}
+        </Button>
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          An invitation email will be automatically sent to the candidate.
+        </p>
+      </div>
+    </form>
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className={fullScreen ? "w-full" : "glass-card rounded-2xl p-6 sm:p-7"}
+    >
+      {!fullScreen && (
+        <div className="mb-6 flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
+            <Sparkles className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Schedule New Interview</h2>
+            <p className="text-sm text-muted-foreground">Set up an AI-led executive interview.</p>
+          </div>
+        </div>
       )}
+
+      <AnimatePresence mode="wait">
+        {isProcessing ? (
+          <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <ProcessingState status={String(currentStatus ?? "processing")} />
+          </motion.div>
+        ) : isTerminal ? (
+          <motion.div key="terminal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <TerminalState status={String(currentStatus)} onReset={() => setProcessingId(null)} />
+          </motion.div>
+        ) : (
+          <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            {formContent}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
 
 function ProcessingState({ status }: { status: string }) {
   return (
-    <div className="flex flex-col items-center gap-4 py-10 text-center">
-      <div className="relative grid h-16 w-16 place-items-center">
-        <span className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
-        <span className="grid h-16 w-16 place-items-center rounded-full bg-primary/15">
-          <Loader2 className="h-7 w-7 animate-spin text-primary" />
+    <div className="flex flex-col items-center gap-6 py-16 text-center">
+      <div className="relative grid h-20 w-20 place-items-center">
+        <span className="absolute inset-0 animate-ping rounded-full bg-primary/15" />
+        <span className="absolute inset-2 animate-ping rounded-full bg-primary/10 animation-delay-150" />
+        <span className="grid h-20 w-20 place-items-center rounded-full bg-primary/10 border border-primary/20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </span>
       </div>
-      <div>
-        <p className="font-semibold text-foreground">Processing session…</p>
-        <p className="text-sm text-muted-foreground">
-          Parsing resume &amp; JD and preparing the interview. Status:{" "}
-          <span className="font-medium text-primary">{status}</span>
+      <div className="space-y-1">
+        <p className="text-lg font-semibold text-foreground">Processing Session</p>
+        <p className="text-sm text-muted-foreground max-w-xs">
+          Parsing resume & JD and preparing your interview. This may take a moment.
         </p>
+        <span className="inline-flex items-center gap-1.5 mt-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+          {status}
+        </span>
       </div>
     </div>
   );
 }
 
-function TerminalState({
-  status,
-  onReset,
-}: {
-  status: string;
-  onReset: () => void;
-}) {
+function TerminalState({ status, onReset }: { status: string; onReset: () => void }) {
   const failed = status === "failed";
   return (
-    <div className="flex flex-col items-center gap-4 py-10 text-center">
-      <div
-        className={
-          failed
-            ? "grid h-14 w-14 place-items-center rounded-full bg-destructive/15 text-destructive"
-            : "grid h-14 w-14 place-items-center rounded-full bg-success/15 text-success"
+    <div className="flex flex-col items-center gap-6 py-16 text-center">
+      <div className={`grid h-20 w-20 place-items-center rounded-full border-2 ${
+        failed ? "border-destructive/30 bg-destructive/10" : "border-success/30 bg-success/10"
+      }`}>
+        {failed
+          ? <XCircle className="h-10 w-10 text-destructive" />
+          : <CheckCircle2 className="h-10 w-10 text-success" />
         }
-      >
-        {failed ? "!" : "✓"}
       </div>
-      <div>
-        <p className="font-semibold text-foreground">
-          {failed ? "Processing failed" : "Session ready"}
+      <div className="space-y-1">
+        <p className="text-lg font-semibold text-foreground">
+          {failed ? "Processing Failed" : "Interview Scheduled!"}
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground max-w-xs">
           {failed
             ? "Something went wrong while processing. Please try again."
-            : "The interview is scheduled and the invitation has been sent."}
+            : "The interview session is ready and the invitation email has been sent."}
         </p>
       </div>
-      <Button variant="outline" onClick={onReset}>
-        Schedule another
+      <Button variant="outline" onClick={onReset} className="gap-2">
+        <Sparkles className="h-4 w-4" />
+        Schedule Another Interview
       </Button>
     </div>
   );
