@@ -24,5 +24,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy source code
 COPY . .
 
-# Start LiveKit Conductor Agent Worker
-CMD ["python", "conductor/agent.py", "dev"]
+# Start LiveKit Conductor Agent Worker (production mode)
+CMD ["python", "conductor/agent.py", "start"]

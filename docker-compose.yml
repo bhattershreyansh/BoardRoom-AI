@@ -1,21 +1,29 @@
 version: '3.8'
 
+# Deploy alongside the existing elevatetrust.in stack on the same EC2.
+# Public traffic for elevatetrust.co.in is routed by elevatetrust-nginx-1
+# (no host ports 80/443 bound here — avoids conflict with the existing app).
+#
+# Before first run on EC2:
+#   docker network ls | grep elevatetrust
+# Confirm the external network name below matches (usually elevatetrust_default).
+
 services:
-  # 1. FastAPI REST API Backend
   api:
     build:
       context: ./Interview-Agent
       dockerfile: Dockerfile.api
     container_name: boardroom_api
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     env_file:
       - .env
     environment:
       - PORT=8000
+    networks:
+      - elevatetrust
     restart: always
 
-  # 2. LiveKit Python Conductor Agent Worker
   agent:
     build:
       context: ./Interview-Agent
@@ -25,22 +33,28 @@ services:
       - .env
     depends_on:
       - api
+    networks:
+      - elevatetrust
     restart: always
 
-  # 3. React / Vite Frontend
   frontend:
     build:
       context: ./lovable-project-dedfcdc7-7e8b-44f5-b3a8-3ce51f7bbe60-2026-07-02
       dockerfile: Dockerfile
       args:
-        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:8000}
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-https://elevatetrust.co.in}
     container_name: boardroom_frontend
-    ports:
-      - "80:80"
-      - "3000:80"
-      - "8080:80"
+    expose:
+      - "80"
     env_file:
       - .env
     depends_on:
       - api
+    networks:
+      - elevatetrust
     restart: always
+
+networks:
+  elevatetrust:
+    external: true
+    name: elevatetrust_default
