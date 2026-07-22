@@ -1,6 +1,3 @@
-version: '3.8'
-
-# Deploy alongside the existing elevatetrust.in stack on the same EC2.
 # Public traffic for elevatetrust.co.in is routed by elevatetrust-nginx-1
 # (no host ports 80/443 bound here — avoids conflict with the existing app).
 #
