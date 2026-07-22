@@ -8,12 +8,12 @@ interface LogoProps {
 
 export function Logo({ className, size = "md" }: LogoProps) {
   // We can adjust the height based on size, or keep it responsive.
-  const heightClass = size === "sm" ? "h-6" : "h-10";
+  const heightClass = size === "sm" ? "h-6" : "h-12";
 
   return (
     <div className={cn("flex items-center", className)}>
       <img
-        src="/image.png"
+        src="/logo-b.png"
         alt="Company Logo"
         className={cn("w-auto object-contain", heightClass)}
       />
