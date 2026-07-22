@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # 1. FastAPI REST API Backend
+  api:
+    build:
+      context: ./Interview-Agent
+      dockerfile: Dockerfile.api
+    container_name: boardroom_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PORT=8000
+    restart: always
+
+  # 2. LiveKit Python Conductor Agent Worker
+  agent:
+    build:
+      context: ./Interview-Agent
+      dockerfile: Dockerfile.agent
+    container_name: boardroom_agent
+    env_file:
+      - .env
+    depends_on:
+      - api
+    restart: always
+
+  # 3. React / Vite Frontend
+  frontend:
+    build:
+      context: ./lovable-project-dedfcdc7-7e8b-44f5-b3a8-3ce51f7bbe60-2026-07-02
+      dockerfile: Dockerfile
+      args:
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:8000}
+    container_name: boardroom_frontend
+    ports:
+      - "80:80"
+      - "3000:80"
+      - "8080:80"
+    env_file:
+      - .env
+    depends_on:
+      - api
+    restart: always

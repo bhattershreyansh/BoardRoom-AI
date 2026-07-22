@@ -1,0 +1,28 @@
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Set PYTHONPATH to ensure all modules are resolvable
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies needed for audio processing and LiveKit plugins
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    g++ \
+    curl \
+    ffmpeg \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements file and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy source code
+COPY . .
+
+# Start LiveKit Conductor Agent Worker
+CMD ["python", "conductor/agent.py", "dev"]
