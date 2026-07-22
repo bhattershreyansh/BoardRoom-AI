@@ -122,37 +122,21 @@ export function ScheduleForm({ fullScreen = false }: { fullScreen?: boolean }) {
       <section>
         <StepBadge number={1} label="Position & Timing" />
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          {/* Role picker as cards */}
-          <div className="sm:col-span-2 space-y-2">
+          {/* Target Role Dropdown */}
+          <div className="space-y-2">
             <Label className="text-sm font-medium text-foreground">Target Role</Label>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {ROLES.map((r) => (
-                <button
-                  key={r.value}
-                  type="button"
-                  id={`role-${r.value}`}
-                  onClick={() => setRoleType(r.value)}
-                  className={`group relative flex flex-col items-start gap-1.5 rounded-xl border p-4 text-left transition-all duration-200 ${
-                    roleType === r.value
-                      ? "border-primary bg-primary/8 shadow-sm ring-1 ring-primary/30"
-                      : "border-border bg-card hover:border-primary/40 hover:bg-accent/20"
-                  }`}
-                >
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
-                    roleType === r.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                  }`}>
-                    <Briefcase className="h-4 w-4" />
-                  </div>
-                  <span className={`text-sm font-semibold leading-tight ${roleType === r.value ? "text-primary" : "text-foreground"}`}>
+            <Select value={roleType} onValueChange={setRoleType}>
+              <SelectTrigger className="w-full transition-all hover:border-primary/40 focus:border-primary">
+                <SelectValue placeholder="Select target role" />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLES.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>
                     {r.label}
-                  </span>
-                  <span className="text-xs text-muted-foreground leading-snug">{r.desc}</span>
-                  {roleType === r.value && (
-                    <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-primary" />
-                  )}
-                </button>
-              ))}
-            </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Scheduled date */}
