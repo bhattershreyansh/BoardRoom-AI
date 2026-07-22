@@ -1,0 +1,14 @@
+# Lean dependencies for the LiveKit voice agent (Docker: Dockerfile.agent)
+livekit-agents==1.6.4
+livekit-plugins-silero==1.6.4
+livekit-plugins-speechmatics==1.6.4
+livekit-plugins-cartesia==1.2.1
+groq==1.5.0
+sqlalchemy==2.0.41
+asyncpg==0.31.0
+pydantic==2.11.7
+pydantic-settings==2.10.1
+python-dotenv==1.1.1
+structlog==25.4.0
+PyPDF2==3.0.1
+docx2txt==0.9
