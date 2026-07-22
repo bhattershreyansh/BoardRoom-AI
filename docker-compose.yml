@@ -1,9 +1,9 @@
 # Public traffic for elevatetrust.co.in is routed by elevatetrust-nginx-1
 # (no host ports 80/443 bound here — avoids conflict with the existing app).
 #
-# Before first run on EC2:
-#   docker network ls | grep elevatetrust
-# Confirm the external network name below matches (usually elevatetrust_default).
+# Before first run on EC2, find the existing app network:
+#   docker inspect elevatetrust-nginx-1 -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{"\n"}}{{end}}'
+# Set ELEVATETRUST_NETWORK in .env to that name (if not elevatetrust_default).
 
 services:
   api:
@@ -54,4 +54,4 @@ services:
 networks:
   elevatetrust:
     external: true
-    name: elevatetrust_default
+    name: ${ELEVATETRUST_NETWORK:-elevatetrust_default}
