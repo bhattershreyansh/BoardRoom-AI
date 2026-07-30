@@ -33,10 +33,7 @@ function LandingPage() {
     <AmbientBackground className="min-h-screen">
       <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
         <header className="flex items-center justify-between">
-          <Logo size="sm" />
-          <Button asChild variant="outline" className="rounded-xl">
-            <Link to="/admin">Admin Portal</Link>
-          </Button>
+          <Logo />
         </header>
 
         <main className="flex flex-1 flex-col items-center justify-center py-16 text-center">
