@@ -240,8 +240,37 @@ function AdminPage() {
 
             {/* ── Settings ── */}
             {activeTab === "settings" && (
-              <div className="flex h-64 items-center justify-center rounded-2xl border border-border bg-card">
-                <p className="text-muted-foreground">This section is under construction.</p>
+              <div className="w-full">
+                <div className="mb-6 sm:mb-8">
+                  <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl lg:text-3xl">
+                    Settings
+                  </h1>
+                  <p className="mt-1.5 text-sm text-muted-foreground sm:text-base">
+                    Manage your account and preferences.
+                  </p>
+                </div>
+                
+                <div className="space-y-6">
+                  <div className="glass-card rounded-2xl border border-border bg-card/70 p-6 backdrop-blur-xl">
+                    <h2 className="mb-4 text-lg font-medium text-foreground">Account Security</h2>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Sign Out</p>
+                        <p className="text-sm text-muted-foreground">Log out of your current session.</p>
+                      </div>
+                      <Button 
+                        variant="destructive" 
+                        onClick={() => {
+                          sessionStorage.removeItem("demo_auth");
+                          setIsAuthenticated(false);
+                          setActiveTab("dashboard");
+                        }}
+                      >
+                        Sign Out
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </motion.div>
