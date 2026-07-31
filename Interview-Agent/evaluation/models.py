@@ -5,10 +5,10 @@ class CompetencyScorecardItem(BaseModel):
     average_score: float
     grade: str                         # "Exceptional" | "Strong" | "Adequate" | "Weak" | "Poor"
     candidate_turns_count: int
-    strategic_framework: str           # "Exceptional" | "Strong" | "Moderate" | "Weak" | "Poor"
-    real_example: str                  # "Exceptional" | "Strong" | "Moderate" | "Weak" | "Poor"
-    metrics: str                       # "Exceptional" | "Strong" | "Moderate" | "Weak" | "Poor"
-    confidence: str                    # "High" | "Medium" | "Low"
+    strategic_framework: str = "Moderate" # "Exceptional" | "Strong" | "Moderate" | "Weak" | "Poor"
+    real_example: str = "Moderate"        # "Exceptional" | "Strong" | "Moderate" | "Weak" | "Poor"
+    metrics: str = "Moderate"             # "Exceptional" | "Strong" | "Moderate" | "Weak" | "Poor"
+    confidence: str = "Medium"            # "High" | "Medium" | "Low"
 
 class BehavioralIndicators(BaseModel):
     communication: int                 # 1 to 5 stars
