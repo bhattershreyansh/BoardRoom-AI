@@ -25,16 +25,29 @@ function fmtTime(value: string) {
   return format(d, "MMM d, yyyy");
 }
 
-export function SessionsTable({ filter }: { filter?: "upcoming" | "completed" | "candidates" }) {
+export function isExpiredSession(s: Session): boolean {
+  const status = String(s.status).toLowerCase();
+  if (status === "expired") return true;
+  if (status === "completed" || status === "active") return false;
+  if (!s.scheduled_time) return false;
+  const d = new Date(s.scheduled_time);
+  if (Number.isNaN(d.getTime())) return false;
+  const expireTime = d.getTime() + 48 * 60 * 60 * 1000;
+  return Date.now() > expireTime;
+}
+
+export function SessionsTable({ filter }: { filter?: "upcoming" | "completed" | "expired" | "candidates" }) {
   const { data, isLoading, isError, refetch, isFetching } = useSessions();
   const navigate = useNavigate();
   const [editSession, setEditSession] = useState<Session | null>(null);
 
   let filteredData = data || [];
   if (filter === "upcoming") {
-    filteredData = filteredData.filter((s: Session) => s.status !== "completed");
+    filteredData = filteredData.filter((s: Session) => s.status !== "completed" && !isExpiredSession(s));
   } else if (filter === "completed") {
     filteredData = filteredData.filter((s: Session) => s.status === "completed");
+  } else if (filter === "expired") {
+    filteredData = filteredData.filter((s: Session) => isExpiredSession(s));
   } else if (filter === "candidates") {
     // Group by email to get unique candidates
     const uniqueCandidates = new Map<string, Session>();

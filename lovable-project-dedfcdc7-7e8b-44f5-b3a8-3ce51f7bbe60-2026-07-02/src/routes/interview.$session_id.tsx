@@ -18,6 +18,7 @@ import { Waveform } from "@/components/interview/waveform";
 import { useCreateToken, useSessions } from "@/hooks/use-sessions";
 import { cn } from "@/lib/utils";
 import { Room, RoomEvent, Track } from "livekit-client";
+import { isExpiredSession } from "@/components/admin/sessions-table";
 
 export const Route = createFileRoute("/interview/$session_id")({
   head: () => ({
@@ -83,7 +84,7 @@ function InterviewPage() {
 
       const room = new Room({
         publishDefaults: {
-          audioPreset: "music",
+          audioPreset: "music" as any,
         },
       });
       roomRef.current = room;
@@ -134,7 +135,7 @@ function InterviewPage() {
         }
       };
 
-      room.on(RoomEvent.IsSpeakingChanged, handleSpeakingUpdate);
+      room.on(RoomEvent.ActiveSpeakersChanged, handleSpeakingUpdate);
 
       // Connect to LiveKit server URL returned by backend
       const connectionUrl = res.url || "ws://localhost:7880";
@@ -192,6 +193,8 @@ function InterviewPage() {
             </motion.div>
           ) : session?.status === "completed" || stage === "ended" ? (
             <EndedState key="ended" />
+          ) : session && (session.status === "expired" || isExpiredSession(session)) ? (
+            <ExpiredState key="expired" />
           ) : stage === "waiting" || stage === "connecting" ? (
             <WaitingRoom
               key="waiting"
@@ -453,6 +456,24 @@ function EndedState() {
       <h1 className="text-2xl font-serif text-foreground">Interview Concluded</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Thank you. Your responses have been recorded. You may close this tab.
+      </p>
+    </motion.div>
+  );
+}
+
+function ExpiredState() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="w-full max-w-md rounded-3xl border border-amber-500/30 bg-card p-10 text-center shadow-xl"
+    >
+      <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-amber-500/15 text-amber-500 shadow-sm">
+        <Clock className="h-7 w-7" />
+      </div>
+      <h1 className="text-2xl font-serif text-foreground">Interview Link Expired</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        This interview link has expired (valid for 48 hours from scheduled date). Please contact your executive recruiter to reschedule.
       </p>
     </motion.div>
   );

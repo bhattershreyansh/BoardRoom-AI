@@ -195,6 +195,17 @@ async def ingest_documents(
         "status": "processing"
     }
 
+def check_is_expired(db_session: InterviewSession) -> bool:
+    if db_session.status in ["completed", "active"]:
+        return False
+    if not db_session.scheduled_time:
+        return False
+    now = datetime.now(timezone.utc)
+    sched = db_session.scheduled_time
+    if sched.tzinfo is None:
+        sched = sched.replace(tzinfo=timezone.utc)
+    return now > (sched + timedelta(hours=48))
+
 @router.get("/{session_id}/status")
 async def get_session_status(session_id: str, db: AsyncSession = Depends(get_db)):
     """
@@ -212,9 +223,16 @@ async def get_session_status(session_id: str, db: AsyncSession = Depends(get_db)
     if not db_session:
         raise HTTPException(status_code=404, detail="Session not found.")
         
+    status = db_session.status
+    if check_is_expired(db_session):
+        if db_session.status != "expired":
+            db_session.status = "expired"
+            await db.commit()
+        status = "expired"
+
     return {
         "session_id": str(db_session.id),
-        "status": db_session.status,
+        "status": status,
         "candidate_name": db_session.candidate_name,
         "candidate_email": db_session.candidate_email
     }
@@ -241,6 +259,15 @@ async def generate_room_token(session_id: str, request: TokenRequest, db: AsyncS
         
     if db_session.status == "completed":
         raise HTTPException(status_code=400, detail="Interview has already been completed.")
+
+    if check_is_expired(db_session) or db_session.status == "expired":
+        if db_session.status != "expired":
+            db_session.status = "expired"
+            await db.commit()
+        raise HTTPException(
+            status_code=400,
+            detail="This interview link has expired (valid for 48 hours from scheduled date). Please contact your recruiter to reschedule."
+        )
         
     try:
         # Mark status as active when they retrieve a token to join the room
@@ -354,23 +381,33 @@ async def get_session_report(session_id: str, db: AsyncSession = Depends(get_db)
 @router.get("")
 async def list_all_sessions(db: AsyncSession = Depends(get_db)):
     """
-    Lists all scheduled and completed sessions.
+    Lists all scheduled, completed, active, and expired sessions.
     """
     stmt = select(InterviewSession).order_by(InterviewSession.created_at.desc())
     result = await db.execute(stmt)
     sessions = result.scalars().all()
-    return [
-        {
+    
+    session_list = []
+    has_changes = False
+    for s in sessions:
+        status = s.status
+        if check_is_expired(s):
+            if s.status != "expired":
+                s.status = "expired"
+                has_changes = True
+            status = "expired"
+        session_list.append({
             "session_id": str(s.id),
             "candidate_name": s.candidate_name,
             "candidate_email": s.candidate_email,
             "role_type": s.role_type,
-            "status": s.status,
+            "status": status,
             "scheduled_time": s.scheduled_time.isoformat() if s.scheduled_time else None,
             "created_at": s.created_at.isoformat() if s.created_at else None
-        }
-        for s in sessions
-    ]
+        })
+    if has_changes:
+        await db.commit()
+    return session_list
 
 class UpdateSessionRequest(BaseModel):
     candidate_name: Optional[str] = None
@@ -380,8 +417,8 @@ class UpdateSessionRequest(BaseModel):
 @router.patch("/{session_id}")
 async def update_session(session_id: str, request: UpdateSessionRequest, db: AsyncSession = Depends(get_db)):
     """
-    Updates the upcoming session metadata.
-    Time Guard: Rejects updates if the scheduled interview time has already reached.
+    Updates session metadata (name, email, or rescheduled date).
+    Rescheduling an expired session with a valid date revives it to 'scheduled'.
     """
     try:
         session_uuid = uuid.UUID(session_id)
@@ -395,14 +432,8 @@ async def update_session(session_id: str, request: UpdateSessionRequest, db: Asy
     if not db_session:
         raise HTTPException(status_code=404, detail="Session not found.")
         
-    # Time Guard: check if current time has passed the scheduled interview time
-    now = datetime.now(timezone.utc)
-    if db_session.scheduled_time:
-        sched = db_session.scheduled_time
-        if sched.tzinfo is None:
-            sched = sched.replace(tzinfo=timezone.utc)
-        if now >= sched:
-            raise HTTPException(status_code=400, detail="Cannot update session after the scheduled interview time has reached.")
+    if db_session.status == "completed":
+        raise HTTPException(status_code=400, detail="Cannot update a completed session.")
             
     # Apply updates
     if request.candidate_name is not None:
@@ -415,6 +446,9 @@ async def update_session(session_id: str, request: UpdateSessionRequest, db: Asy
             if parsed_time.tzinfo is None:
                 parsed_time = parsed_time.replace(tzinfo=timezone.utc)
             db_session.scheduled_time = parsed_time
+            now = datetime.now(timezone.utc)
+            if now <= (parsed_time + timedelta(hours=48)):
+                db_session.status = "scheduled"
         except ValueError:
             raise HTTPException(status_code=400, detail="scheduled_time must be in ISO format.")
             

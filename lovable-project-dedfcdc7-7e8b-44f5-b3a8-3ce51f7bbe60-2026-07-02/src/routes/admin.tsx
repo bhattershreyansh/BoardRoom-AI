@@ -212,12 +212,16 @@ function AdminPage() {
                   <TabsList className="mb-6 w-full sm:w-auto">
                     <TabsTrigger value="upcoming" className="flex-1 sm:flex-none">Upcoming</TabsTrigger>
                     <TabsTrigger value="completed" className="flex-1 sm:flex-none">Completed</TabsTrigger>
+                    <TabsTrigger value="expired" className="flex-1 sm:flex-none">Expired</TabsTrigger>
                   </TabsList>
                   <TabsContent value="upcoming">
                     <SessionsTable filter="upcoming" />
                   </TabsContent>
                   <TabsContent value="completed">
                     <SessionsTable filter="completed" />
+                  </TabsContent>
+                  <TabsContent value="expired">
+                    <SessionsTable filter="expired" />
                   </TabsContent>
                 </Tabs>
               </div>

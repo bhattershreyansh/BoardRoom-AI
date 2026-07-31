@@ -7,7 +7,8 @@ export type SessionStatus =
   | "scheduled"
   | "active"
   | "completed"
-  | "failed";
+  | "failed"
+  | "expired";
 
 export interface Session {
   session_id: string;
@@ -16,6 +17,10 @@ export interface Session {
   role_type: RoleType | string;
   scheduled_time: string;
   status: SessionStatus | string;
+  profile_data?: {
+    total_years_experience?: number;
+    [key: string]: any;
+  };
 }
 
 export interface IngestResponse {

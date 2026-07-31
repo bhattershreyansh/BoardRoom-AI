@@ -34,6 +34,12 @@ const STATUS_STYLES: Record<
     text: "text-destructive",
     bg: "bg-destructive/10 border-destructive/20",
   },
+  expired: {
+    label: "Expired",
+    dot: "bg-amber-500",
+    text: "text-amber-500",
+    bg: "bg-amber-500/10 border-amber-500/20",
+  },
 };
 
 export function StatusPill({ status }: { status: string }) {
