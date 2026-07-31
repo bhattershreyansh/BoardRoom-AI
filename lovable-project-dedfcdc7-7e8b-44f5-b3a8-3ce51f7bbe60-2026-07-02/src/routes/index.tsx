@@ -8,15 +8,15 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "BoardRoom AI — AI-Powered Executive Interview Platform" },
+      { title: "BoardRoom AI" },
       {
         name: "description",
         content:
-          "Schedule, run, and evaluate AI-powered voice interviews for CXO-level leadership hiring.",
+          "BoardRoom AI is the enterprise platform for scheduling, running, and evaluating AI-powered voice interviews for CXO-level leadership hiring.",
       },
       {
         property: "og:title",
-        content: "BoardRoom AI — AI-Powered Executive Interview Platform",
+        content: "BoardRoom AI",
       },
       {
         property: "og:description",

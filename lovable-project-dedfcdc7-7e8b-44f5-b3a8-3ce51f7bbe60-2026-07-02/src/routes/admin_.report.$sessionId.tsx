@@ -22,7 +22,7 @@ import type { CompetencyNote, OverallSignal } from "@/lib/types";
 export const Route = createFileRoute("/admin_/report/$sessionId")({
   head: () => ({
     meta: [
-      { title: "Evaluation Report — BoardRoom AI" },
+      { title: "BoardRoom AI" },
       { name: "description", content: "AI-generated evaluation report for the executive interview session." },
     ],
   }),
