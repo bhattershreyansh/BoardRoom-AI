@@ -22,7 +22,7 @@ import { Room, RoomEvent, Track } from "livekit-client";
 export const Route = createFileRoute("/interview/$session_id")({
   head: () => ({
     meta: [
-      { title: "Executive Interview — BoardRoom AI" },
+      { title: "BoardRoom AI" },
       { name: "robots", content: "noindex" },
       {
         name: "description",

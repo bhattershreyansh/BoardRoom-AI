@@ -78,14 +78,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "BoardRoom AI — AI-Powered Executive Interview Platform" },
+      { title: "BoardRoom AI" },
       {
         name: "description",
         content:
           "BoardRoom AI is the enterprise platform for scheduling, running, and evaluating AI-powered voice interviews for CXO-level leadership hiring.",
       },
       { name: "author", content: "BoardRoom AI" },
-      { property: "og:title", content: "BoardRoom AI — AI-Powered Executive Interview Platform" },
+      { property: "og:title", content: "BoardRoom AI" },
       {
         property: "og:description",
         content:
@@ -93,7 +93,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -113,7 +112,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/honeycomb.png", type: "image/png" },
     ],
   }),
   shellComponent: RootShell,

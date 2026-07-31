@@ -13,13 +13,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin Dashboard — BoardRoom AI" },
+      { title: "BoardRoom AI" },
       {
         name: "description",
         content:
           "Schedule AI-powered executive interviews and review evaluation reports for CXO-level candidates.",
       },
-      { property: "og:title", content: "Admin Dashboard — BoardRoom AI" },
+      { property: "og:title", content: "BoardRoom AI" },
       {
         property: "og:description",
         content:
